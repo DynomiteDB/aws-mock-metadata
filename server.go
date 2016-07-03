@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -17,9 +18,16 @@ func (app *App) NewServer() {
 	r := mux.NewRouter()
 	r.Handle("/", appHandler(app.rootHandler))
 	s := r.PathPrefix("/latest/meta-data").Subrouter()
-	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
-	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
+
+	s.Handle("/public-ipv4", appHandler(app.publicIpHandler))
+	s.Handle("/public-hostname", appHandler(app.publicHostnameHandler))
 	s.Handle("/local-ipv4", appHandler(app.privateIpHandler))
+	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
+
+	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
+	s.Handle("/instance-type", appHandler(app.instanceTypeHandler))
+
+	s.Handle("/security-groups", appHandler(app.securityGroupsHandler))
 
 	p := s.PathPrefix("/placement").Subrouter()
 	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
@@ -29,8 +37,8 @@ func (app *App) NewServer() {
 	i.Handle("/security-credentials/"+app.RoleName, appHandler(app.roleHandler))
 
 	n := s.PathPrefix("/network/interfaces").Subrouter()
-	n.Handle("/macs", appHandler(app.macHandler))
-	n.Handle("/macs/"+app.Hostname+"/vpc-id", appHandler(app.vpcHandler))
+	n.Handle("/macs/", appHandler(app.macHandler))
+	n.Handle("/macs/"+app.MacAddress+"/vpc-id", appHandler(app.vpcHandler))
 
 	d := r.PathPrefix("/latest/dynamic/instance-identity").Subrouter()
 	d.Handle("/document", appHandler(app.instanceIdentityHandler))
@@ -77,6 +85,22 @@ func (app *App) instanceIDHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.InstanceID)
 }
 
+func (app *App) instanceTypeHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.InstanceType)
+}
+
+func (app *App) securityGroupsHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, strings.Replace(app.SecurityGroups, " ", "\n", -1))
+}
+
+func (app *App) publicIpHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.PublicIp)
+}
+
+func (app *App) publicHostnameHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.PublicHostname)
+}
+
 func (app *App) localHostnameHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.Hostname)
 }
@@ -98,7 +122,7 @@ func (app *App) trailingSlashRedirect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) macHandler(w http.ResponseWriter, r *http.Request) {
-	write(w, app.Hostname+"/")
+	write(w, app.MacAddress+"/")
 }
 
 func (app *App) vpcHandler(w http.ResponseWriter, r *http.Request) {
