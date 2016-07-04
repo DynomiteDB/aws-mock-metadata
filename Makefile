@@ -13,7 +13,7 @@ setup:
 
 build: *.go
 	gofmt -w=true .
-	go build -o bin/aws-mock-metadata $(GOBUILD_VERSION_ARGS) github.com/DynomiteDB/aws-mock-metadata
+	go build -o bin/aws-mock-metadata $(GOBUILD_VERSION_ARGS) github.com/dynomitedb/aws-mock-metadata
 
 test: check
 	go test
