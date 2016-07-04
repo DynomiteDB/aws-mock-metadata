@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -110,6 +111,7 @@ func (app *App) privateIpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) availabilityZoneHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("In availabilityZoneHandler")
 	write(w, app.AvailabilityZone)
 }
 
